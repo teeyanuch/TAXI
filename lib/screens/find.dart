@@ -1,10 +1,13 @@
-import 'dart:math';
-
+import 'dart:convert';
+import 'package:TAXI/model/accept_model.dart';
+import 'package:TAXI/model/position_model.dart';
 import 'package:TAXI/screens/main_addlo.dart';
 import 'package:TAXI/screens/time.dart';
+import 'package:TAXI/screens/utility/my_constant.dart';
 import 'package:TAXI/screens/utility/my_style.dart';
 import 'package:TAXI/screens/utility/normal_dialog.dart';
 import 'package:TAXI/screens/utility/signout_process.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -18,18 +21,16 @@ class Find extends StatefulWidget {
 class _FindState extends State<Find> {
   String nameUser;
   double lat, lng;
-
-  // @override
-  // void initState() {
-  //   super.initState();
-
-  // }
+  List<AcceptModel> acceptModels = [];
+  Map<MarkerId, Marker> mapMarkers = Map();
 
   void routeToAddlo() {
     MaterialPageRoute materialPageRoute = MaterialPageRoute(
       builder: (context) => MianAddLocation(),
     );
-    Navigator.push(context, materialPageRoute);
+    Navigator.push(context, materialPageRoute).then(
+      (value) => readAllPosition(),
+    );
   }
 
   @override
@@ -37,6 +38,65 @@ class _FindState extends State<Find> {
     super.initState();
     findUser();
     checkPremission();
+    readAllPosition();
+  }
+
+  void createAllMarker(LatLng latLng, String idMarker,
+      BitmapDescriptor bitmapDescriptor, String title) {
+    MarkerId markerId = MarkerId(idMarker);
+    Marker marker = Marker(
+      markerId: markerId,
+      position: latLng,
+      icon: bitmapDescriptor,
+      infoWindow: InfoWindow(title: title),
+    );
+    mapMarkers[markerId] = marker;
+  }
+
+  BitmapDescriptor findColorMarker(String string) {
+    List<String> typeTitles = MyConstant.typeMarkers;
+    List<BitmapDescriptor> descriptors = [
+      BitmapDescriptor.defaultMarkerWithHue(30),
+      BitmapDescriptor.defaultMarkerWithHue(240),
+      BitmapDescriptor.defaultMarkerWithHue(120),
+      BitmapDescriptor.defaultMarkerWithHue(10),
+    ];
+
+    if (string == typeTitles[0]) {
+      return descriptors[0];
+    } else if (string == typeTitles[1]) {
+      return descriptors[1];
+    } else if (string == typeTitles[2]) {
+      return descriptors[2];
+    } else {
+      return descriptors[3];
+    }
+  }
+
+  Future<Null> readAllPosition() async {
+    String apiReadAllPosition =
+        '${MyConstant.domain}/findtaxi/getAllAccept.php';
+    await Dio().get(apiReadAllPosition).then(
+      (value) {
+        // print('## value ==>> $value');
+        int i = 0;
+        for (var item in json.decode(value.data)) {
+          AcceptModel model = AcceptModel.fromMap(item);
+          setState(() {
+            acceptModels.add(model);
+            createAllMarker(
+                LatLng(
+                  double.parse(model.lat),
+                  double.parse(model.lng),
+                ),
+                'idMarker$i',
+                findColorMarker(model.type),
+                model.name);
+          });
+          i++;
+        }
+      },
+    );
   }
 
   Future<Null> checkPremission() async {
@@ -166,29 +226,51 @@ class _FindState extends State<Find> {
                   zoom: 14,
                 ),
                 onMapCreated: (controller) {},
-                markers: setMarker(),
+                myLocationEnabled: true,
+                markers: Set<Marker>.of(mapMarkers.values),
               ),
       );
 
-  // Set<Marker> myMarker() {
-  //   return <Marker>[
-  //     Marker(
-  //       markerId: MarkerId('taxiMarker'),
-  //       position: LatLng(18.60198944183668, 99.02076967163445),
-  //       infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ศรีสองเมือง'),
-  //     ),
-  //     Marker(
-  //       markerId: MarkerId('taxiMarker'),
-  //       position: LatLng(18.582807182576822, 99.00672417246128),
-  //       infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ในเมือง'),
-  //     ),
-  //     Marker(
-  //       markerId: MarkerId('taxiMarker'),
-  //       position: LatLng(18.59452201860414, 99.04792290226156),
-  //       infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ตลาดสันป่าฝ้าย'),
-  //     ),
-  //   ].toSet();
-  // }
+  Set<Marker> myMarker() {
+    return <Marker>[
+      Marker(
+        markerId: MarkerId('taxiMarker'),
+        position: LatLng(18.60198944183668, 99.02076967163445),
+        infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ศรีสองเมือง'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(30),
+      ),
+      Marker(
+        markerId: MarkerId('taxiMarker'),
+        position: LatLng(18.582807182576822, 99.00672417246128),
+        infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ในเมือง'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(30),
+      ),
+      Marker(
+        markerId: MarkerId('taxiMarker'),
+        position: LatLng(18.59452201860414, 99.04792290226156),
+        infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ตลาดสันป่าฝ้าย'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(30),
+      ),
+      Marker(
+        markerId: MarkerId('taxiMarker'),
+        position: LatLng(18.59142048148731, 99.04717187874293),
+        infoWindow: InfoWindow(title: 'ร้านเช่ารถ'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(240),
+      ),
+      Marker(
+        markerId: MarkerId('taxiMarker'),
+        position: LatLng(18.592894974885816, 99.05183892251534),
+        infoWindow: InfoWindow(title: 'รถแท็กซี่'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(120),
+      ),
+      Marker(
+        markerId: MarkerId('taxiMarker'),
+        position: LatLng(18.59374915832566, 99.04380302415778),
+        infoWindow: InfoWindow(title: 'รถสองแถว'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(10),
+      ),
+    ].toSet();
+  }
 
   // Container showMap() {
   //   LatLng latLng = LatLng(18.60198944183668, 99.02076967163445);

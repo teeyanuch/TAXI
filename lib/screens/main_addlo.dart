@@ -1,23 +1,58 @@
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:TAXI/model/position_model.dart';
 import 'package:TAXI/screens/find.dart';
+import 'package:TAXI/screens/utility/my_constant.dart';
 import 'package:TAXI/screens/utility/my_style.dart';
+import 'package:TAXI/screens/utility/normal_dialog.dart';
 import 'package:TAXI/screens/utility/signout_process.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MianAddLocation extends StatefulWidget {
-
-  
   @override
   _MianAddLocationState createState() => _MianAddLocationState();
 }
 
 class _MianAddLocationState extends State<MianAddLocation> {
   String nameUser;
+  double lat, lng;
+  List<String> typeMarkers;
+  String typeMarker;
+  final formKey = GlobalKey<FormState>();
+  TextEditingController namePlateController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+
+    typeMarkers = MyConstant.typeMarkers;
+
     findUser();
+    findLatLng();
+  }
+
+  Future<Null> findLatLng() async {
+    Position position = await findPosition();
+    setState(() {
+      lat = position.latitude;
+      lng = position.longitude;
+      print('### lat = $lat, lng = $lng');
+    });
+  }
+
+  Future<Position> findPosition() async {
+    Position position;
+    try {
+      position = await Geolocator.getCurrentPosition();
+      return position;
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<Null> findUser() async {
@@ -31,9 +66,234 @@ class _MianAddLocationState extends State<MianAddLocation> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-         title: Text('เพิ่มพิกัดวินมอเตอร์ไซค์'),
+        title: Text('เพิ่มพิกัด'),
       ),
-      drawer: drawerMenu(),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).requestFocus(
+          FocusNode(),
+        ),
+        behavior: HitTestBehavior.opaque,
+        child: Center(
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                children: [
+                  buildName(),
+                  buildTypeMarker(),
+                  buildMap(),
+                  buildAddButton(),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  double calculateDistance(double lat1, double lng1, double lat2, double lng2) {
+    double distance = 0;
+
+    var p = 0.017453292519943295;
+    var c = cos;
+    var a = 0.5 -
+        c((lat2 - lat1) * p) / 2 +
+        c(lat1 * p) * c(lat2 * p) * (1 - c((lng2 - lng1) * p)) / 2;
+    distance = 12742 * asin(sqrt(a));
+
+    return distance;
+  }
+
+  RaisedButton buildAddButton() {
+    return RaisedButton(
+      onPressed: () async {
+        if (formKey.currentState.validate()) {
+          if (typeMarker == null) {
+            normalDialog(context, 'โปรดเลือกเลือกชนิดของพิกัด');
+          } else {
+            SharedPreferences preferences =
+                await SharedPreferences.getInstance();
+            String idRecord = preferences.getString('id');
+
+            String apiCheckLocation =
+                '${MyConstant.domain}/findtaxi/getPositionWhereidRecord.php?isAdd=true&idRecord=$idRecord';
+            await Dio().get(apiCheckLocation).then((value) {
+              if (value.toString() == 'null') {
+                processAddLocation(idRecord);
+              } else {
+                bool statusDisKm = true; //true => สามารถ Add Location ได้
+                for (var item in json.decode(value.data)) {
+                  PositionModel model = PositionModel.fromMap(item);
+                  double disKm = calculateDistance(
+                    lat,
+                    lng,
+                    double.parse(model.lat),
+                    double.parse(model.lng),
+                  );
+                  if (disKm <= 0.2) {
+                    statusDisKm = false;
+                  }
+                }
+
+                if (statusDisKm) {
+                  processAddLocation(idRecord);
+                } else {
+                  normalDialog(context, 'สถานที่นี้คุณเคย Add Location ไปแล้ว');
+                }
+              }
+            });
+          } // end if
+        }
+      },
+      child: Text('เพิ่มพิกัด'),
+    );
+  }
+
+  Future<Null> processAddLocation(String idRecord) async {
+    // สิ่งที่ต้องทำถ้าไม่อยู่ที่เดิม
+    String apiInsertLocation =
+        '${MyConstant.domain}/findtaxi/addPosition.php?isAdd=true&idRecord=$idRecord&name=${namePlateController.text}&type=$typeMarker&lat=$lat&lng=$lng';
+
+    await Dio().get(apiInsertLocation).then((value) async {
+      if (value.toString() == 'true') {
+        String apiReadAllPosition =
+            '${MyConstant.domain}/findtaxi/getAllPosition.php';
+        // print('###########################################');
+        // print('####### api = $apiReadAllPosition');
+        // print('###########################################');
+        await Dio().get(apiReadAllPosition).then((value) {
+          int loopTime = 0;
+          for (var item in json.decode(value.data)) {
+            PositionModel positionModel = PositionModel.fromMap(item);
+            double disKm = calculateDistance(
+              lat,
+              lng,
+              double.parse(positionModel.lat),
+              double.parse(positionModel.lng),
+            );
+            print('#### disKm ===>>> $disKm');
+            if (disKm <= 0.2) {
+              loopTime++;
+            }
+          }
+          // print('###########################################');
+          // print('loopTime = $loopTime');
+          // print('###########################################');
+
+          if (loopTime < 5) {
+            waitAcceptDialog(loopTime);
+          } else {
+            acceptDialog(namePlateController.text, typeMarker);
+          }
+        });
+      } else {
+        normalDialog(context, 'ไม่สามารถอัพเดตพิกัดได้');
+      }
+    });
+  }
+
+  Future<Null> waitAcceptDialog(int loopTime) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+            'ขอบคุณที่เพิ่มพิกัด พิกัดนี้มีคนเพิ่มอยู่ $loopTime คน รอ Accept ค่ะ'),
+        actions: [
+          FlatButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<Null> acceptDialog(String name, String type) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('พิกัดของคุณ Accept แล้ว'),
+        actions: [
+          FlatButton(
+            onPressed: () async {
+              String apiAddAccept =
+                  '${MyConstant.domain}/findtaxi/addAccept.php?isAdd=true&name=$name&lat=$lat&lng=$lng&type=$type';
+              await Dio().get(apiAddAccept).then(
+                (value) {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+              );
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Container buildMap() {
+    return Container(
+      margin: EdgeInsets.symmetric(
+        vertical: 16,
+      ),
+      width: 250,
+      height: 250,
+      child: lat == null
+          ? MyStyle().showProgress()
+          : GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: LatLng(lat, lng),
+                zoom: 16,
+              ),
+              onMapCreated: (controller) {},
+              myLocationEnabled: true,
+            ),
+    );
+  }
+
+  DropdownButton<String> buildTypeMarker() {
+    return DropdownButton<String>(
+      value: typeMarker,
+      items: typeMarkers
+          .map(
+            (e) => DropdownMenuItem(
+              child: Text(e),
+              value: e,
+            ),
+          )
+          .toList(),
+      hint: Text('โปรดเลือกชนิดของพิกัด'),
+      onChanged: (value) {
+        setState(() {
+          typeMarker = value;
+        });
+      },
+    );
+  }
+
+  Container buildName() {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 16),
+      width: 250,
+      child: TextFormField(
+        controller: namePlateController,
+        validator: (value) {
+          if (value.isEmpty) {
+            return 'กรุณากรอกชื่อสถานที่';
+          } else {
+            return null;
+          }
+        },
+        decoration: InputDecoration(
+          labelText: 'ชื่อสถานที่: ',
+          border: OutlineInputBorder(),
+        ),
+      ),
     );
   }
 
@@ -56,7 +316,8 @@ class _MianAddLocationState extends State<MianAddLocation> {
           ListTile(
             leading: IconButton(
               icon: Icon(
-                Icons.motorcycle, size: 30.0,
+                Icons.motorcycle,
+                size: 30.0,
               ),
               onPressed: () {
                 MaterialPageRoute route =
@@ -120,7 +381,4 @@ class _MianAddLocationState extends State<MianAddLocation> {
       ),
     );
   }
-
 }
-
-

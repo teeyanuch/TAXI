@@ -1,3 +1,4 @@
+import 'package:TAXI/screens/utility/my_constant.dart';
 import 'package:TAXI/screens/utility/my_style.dart';
 import 'package:TAXI/screens/utility/normal_dialog.dart';
 import 'package:dio/dio.dart';
@@ -80,7 +81,7 @@ class _SignUpState extends State<SignUp> {
 
   Future<Null> checkUser() async {
     String url =
-        'http://192.168.1.43/findtaxi/getUserWhereUser.php?isAdd=true&User=$user';
+        '${MyConstant.domain}/findtaxi/getUserWhereUser.php?isAdd=true&User=$user';
     try {
       Response response = await Dio().get(url);
       if (response.toString() == 'null') {
@@ -94,7 +95,7 @@ class _SignUpState extends State<SignUp> {
 
   Future<Null> registerThread() async {
     String url =
-        'http://192.168.1.43/findtaxi/addUser.php?isAdd=true&Name=$name&User=$user&Password=$password';
+        '${MyConstant.domain}/findtaxi/addUser.php?isAdd=true&Name=$name&User=$user&Password=$password';
 
     try {
       Response response = await Dio().get(url);

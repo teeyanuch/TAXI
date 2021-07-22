@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:TAXI/model/user_model.dart';
 import 'package:TAXI/screens/main_find.dart';
+import 'package:TAXI/screens/utility/my_constant.dart';
 import 'package:TAXI/screens/utility/my_style.dart';
 import 'package:TAXI/screens/utility/normal_dialog.dart';
 import 'package:dio/dio.dart';
@@ -79,12 +80,15 @@ class _SignInState extends State<SignIn> {
 
   Future<Null> checkAuthen() async {
     String url =
-        'http://192.168.1.43/findtaxi/getUserWhereUser.php?isAdd=true&User=$user';
+        '${MyConstant.domain}/findtaxi/getUserWhereUser.php?isAdd=true&User=$user';
     try {
       Response response = await Dio().get(url);
       print('res = $response');
 
-      var result = json.decode(response.data);
+      if (response.toString() == 'null') {
+        normalDialog(context, 'ไม่มี $user นี้');
+      } else {
+        var result = json.decode(response.data);
       print('result = $result');
       for (var map in result) {
         UserModel userModel = UserModel.fromJson(map);
@@ -93,6 +97,7 @@ class _SignInState extends State<SignIn> {
         } else {
           normalDialog(context, 'Password ผิด กรุณาลองใหม่');
         }
+      }
       }
     } catch (e) {}
   }
