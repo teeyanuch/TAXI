@@ -47,8 +47,8 @@ class _MainFindState extends State<MainFind> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  getExpanded('Logo8', 'หาพิกัด', 'วินมอเตอร์ไซต์'),
-                  getExpanded1('Logo5', 'เพิ่มพิกัด', 'วินมอเตอร์ไซต์'),
+                  getExpanded('Logo8', 'หาพิกัด', 'รถรับจ้าง'),
+                  getExpanded1('Logo5', 'เพิ่มพิกัด', 'รถรับจ้าง'),
                 ],
               ),
             ),
@@ -86,7 +86,7 @@ class _MainFindState extends State<MainFind> {
               },
             ),
             title: Text(
-              'หาพิกัดวินมอเตอร์ไซต์',
+              'หาพิกัดรถรับจ้าง',
               style: TextStyle(fontSize: 16),
             ),
             onTap: () {
@@ -106,7 +106,7 @@ class _MainFindState extends State<MainFind> {
               },
             ),
             title: Text(
-              'เพิ่มพิกัดวินมอเตอร์ไซต์',
+              'เพิ่มพิกัดรถรับจ้าง',
               style: TextStyle(fontSize: 16),
             ),
             onTap: () {

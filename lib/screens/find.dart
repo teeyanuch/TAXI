@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:TAXI/model/accept_model.dart';
-import 'package:TAXI/model/position_model.dart';
 import 'package:TAXI/screens/main_addlo.dart';
 import 'package:TAXI/screens/time.dart';
 import 'package:TAXI/screens/utility/my_constant.dart';
@@ -57,9 +56,9 @@ class _FindState extends State<Find> {
     List<String> typeTitles = MyConstant.typeMarkers;
     List<BitmapDescriptor> descriptors = [
       BitmapDescriptor.defaultMarkerWithHue(30),
-      BitmapDescriptor.defaultMarkerWithHue(240),
-      BitmapDescriptor.defaultMarkerWithHue(120),
-      BitmapDescriptor.defaultMarkerWithHue(10),
+      BitmapDescriptor.defaultMarkerWithHue(210),
+      BitmapDescriptor.defaultMarkerWithHue(135),
+      BitmapDescriptor.defaultMarkerWithHue(5),
     ];
 
     if (string == typeTitles[0]) {
@@ -172,7 +171,7 @@ class _FindState extends State<Find> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('หาพิกัดวินมอเตอร์ไซค์'),
+        title: Text('หาพิกัดรถรับจ้าง'),
       ),
       drawer: drawerMenu(),
       body: SingleChildScrollView(
@@ -231,46 +230,46 @@ class _FindState extends State<Find> {
               ),
       );
 
-  Set<Marker> myMarker() {
-    return <Marker>[
-      Marker(
-        markerId: MarkerId('taxiMarker'),
-        position: LatLng(18.60198944183668, 99.02076967163445),
-        infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ศรีสองเมือง'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(30),
-      ),
-      Marker(
-        markerId: MarkerId('taxiMarker'),
-        position: LatLng(18.582807182576822, 99.00672417246128),
-        infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ในเมือง'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(30),
-      ),
-      Marker(
-        markerId: MarkerId('taxiMarker'),
-        position: LatLng(18.59452201860414, 99.04792290226156),
-        infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ตลาดสันป่าฝ้าย'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(30),
-      ),
-      Marker(
-        markerId: MarkerId('taxiMarker'),
-        position: LatLng(18.59142048148731, 99.04717187874293),
-        infoWindow: InfoWindow(title: 'ร้านเช่ารถ'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(240),
-      ),
-      Marker(
-        markerId: MarkerId('taxiMarker'),
-        position: LatLng(18.592894974885816, 99.05183892251534),
-        infoWindow: InfoWindow(title: 'รถแท็กซี่'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(120),
-      ),
-      Marker(
-        markerId: MarkerId('taxiMarker'),
-        position: LatLng(18.59374915832566, 99.04380302415778),
-        infoWindow: InfoWindow(title: 'รถสองแถว'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(10),
-      ),
-    ].toSet();
-  }
+  // Set<Marker> myMarker() {
+  //   return <Marker>[
+  //     Marker(
+  //       markerId: MarkerId('taxiMarker'),
+  //       position: LatLng(18.60198944183668, 99.02076967163445),
+  //       infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ศรีสองเมือง'),
+  //       icon: BitmapDescriptor.defaultMarkerWithHue(30),
+  //     ),
+  //     Marker(
+  //       markerId: MarkerId('taxiMarker'),
+  //       position: LatLng(18.582807182576822, 99.00672417246128),
+  //       infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ในเมือง'),
+  //       icon: BitmapDescriptor.defaultMarkerWithHue(30),
+  //     ),
+  //     Marker(
+  //       markerId: MarkerId('taxiMarker'),
+  //       position: LatLng(18.59452201860414, 99.04792290226156),
+  //       infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ตลาดสันป่าฝ้าย'),
+  //       icon: BitmapDescriptor.defaultMarkerWithHue(30),
+  //     ),
+  //     Marker(
+  //       markerId: MarkerId('taxiMarker'),
+  //       position: LatLng(18.59142048148731, 99.04717187874293),
+  //       infoWindow: InfoWindow(title: 'ร้านเช่ารถ'),
+  //       icon: BitmapDescriptor.defaultMarkerWithHue(240),
+  //     ),
+  //     Marker(
+  //       markerId: MarkerId('taxiMarker'),
+  //       position: LatLng(18.592894974885816, 99.05183892251534),
+  //       infoWindow: InfoWindow(title: 'รถแท็กซี่'),
+  //       icon: BitmapDescriptor.defaultMarkerWithHue(120),
+  //     ),
+  //     Marker(
+  //       markerId: MarkerId('taxiMarker'),
+  //       position: LatLng(18.59374915832566, 99.04380302415778),
+  //       infoWindow: InfoWindow(title: 'รถสองแถว'),
+  //       icon: BitmapDescriptor.defaultMarkerWithHue(10),
+  //     ),
+  //   ].toSet();
+  // }
 
   // Container showMap() {
   //   LatLng latLng = LatLng(18.60198944183668, 99.02076967163445);
@@ -331,7 +330,7 @@ class _FindState extends State<Find> {
           style: TextStyle(color: Colors.deepOrange[300]),
         ),
         SizedBox(
-          width: 25,
+          width: 60,
         ),
         Icon(
           Icons.location_on,
@@ -400,7 +399,7 @@ class _FindState extends State<Find> {
               },
             ),
             title: Text(
-              'หาพิกัดวินมอเตอร์ไซต์',
+              'หาพิกัดรถรับจ้าง',
               style: TextStyle(fontSize: 16),
             ),
             onTap: () {
@@ -420,7 +419,7 @@ class _FindState extends State<Find> {
               },
             ),
             title: Text(
-              'เพิ่มพิกัดวินมอเตอร์ไซต์',
+              'เพิ่มพิกัดรถรับจ้าง',
               style: TextStyle(fontSize: 16),
             ),
             onTap: () {

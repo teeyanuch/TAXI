@@ -1,12 +1,9 @@
 import 'dart:convert';
 import 'dart:math';
-
 import 'package:TAXI/model/position_model.dart';
-import 'package:TAXI/screens/find.dart';
 import 'package:TAXI/screens/utility/my_constant.dart';
 import 'package:TAXI/screens/utility/my_style.dart';
 import 'package:TAXI/screens/utility/normal_dialog.dart';
-import 'package:TAXI/screens/utility/signout_process.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -66,7 +63,7 @@ class _MianAddLocationState extends State<MianAddLocation> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('เพิ่มพิกัด'),
+        title: Text('เพิ่มพิกัดรถรับจ้าง'),
       ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).requestFocus(
@@ -105,50 +102,66 @@ class _MianAddLocationState extends State<MianAddLocation> {
     return distance;
   }
 
-  RaisedButton buildAddButton() {
-    return RaisedButton(
-      onPressed: () async {
-        if (formKey.currentState.validate()) {
-          if (typeMarker == null) {
-            normalDialog(context, 'โปรดเลือกเลือกชนิดของพิกัด');
-          } else {
-            SharedPreferences preferences =
-                await SharedPreferences.getInstance();
-            String idRecord = preferences.getString('id');
+  Widget buildAddButton() => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 250,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(29),
+              child: RaisedButton(
+                padding: EdgeInsets.symmetric(vertical: 15),
+                color: Colors.deepOrange[100],
+                onPressed: () async {
+                  if (formKey.currentState.validate()) {
+                    if (typeMarker == null) {
+                      normalDialog(context, 'โปรดเลือกเลือกชนิดของพิกัด');
+                    } else {
+                      SharedPreferences preferences =
+                          await SharedPreferences.getInstance();
+                      String idRecord = preferences.getString('id');
 
-            String apiCheckLocation =
-                '${MyConstant.domain}/findtaxi/getPositionWhereidRecord.php?isAdd=true&idRecord=$idRecord';
-            await Dio().get(apiCheckLocation).then((value) {
-              if (value.toString() == 'null') {
-                processAddLocation(idRecord);
-              } else {
-                bool statusDisKm = true; //true => สามารถ Add Location ได้
-                for (var item in json.decode(value.data)) {
-                  PositionModel model = PositionModel.fromMap(item);
-                  double disKm = calculateDistance(
-                    lat,
-                    lng,
-                    double.parse(model.lat),
-                    double.parse(model.lng),
-                  );
-                  if (disKm <= 0.2) {
-                    statusDisKm = false;
+                      String apiCheckLocation =
+                          '${MyConstant.domain}/findtaxi/getPositionWhereidRecord.php?isAdd=true&idRecord=$idRecord';
+                      await Dio().get(apiCheckLocation).then((value) {
+                        if (value.toString() == 'null') {
+                          processAddLocation(idRecord);
+                        } else {
+                          bool statusDisKm =
+                              true; //true => สามารถ Add Location ได้
+                          for (var item in json.decode(value.data)) {
+                            PositionModel model = PositionModel.fromMap(item);
+                            double disKm = calculateDistance(
+                              lat,
+                              lng,
+                              double.parse(model.lat),
+                              double.parse(model.lng),
+                            );
+                            if ((disKm <= 0.2) && (typeMarker == model.type)) {
+                              statusDisKm = false;
+                            }
+                          }
+
+                          if (statusDisKm) {
+                            processAddLocation(idRecord);
+                          } else {
+                            normalDialog(
+                                context, 'สถานที่นี้ คุณได้เพิ่มพิกัดไปแล้ว');
+                          }
+                        }
+                      });
+                    } // end if
                   }
-                }
-
-                if (statusDisKm) {
-                  processAddLocation(idRecord);
-                } else {
-                  normalDialog(context, 'สถานที่นี้คุณเคย Add Location ไปแล้ว');
-                }
-              }
-            });
-          } // end if
-        }
-      },
-      child: Text('เพิ่มพิกัด'),
-    );
-  }
+                },
+                child: Text(
+                  'เพิ่มพิกัด',
+                  style: TextStyle(color: Colors.deepOrange),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
 
   Future<Null> processAddLocation(String idRecord) async {
     // สิ่งที่ต้องทำถ้าไม่อยู่ที่เดิม
@@ -197,8 +210,7 @@ class _MianAddLocationState extends State<MianAddLocation> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
-            'ขอบคุณที่เพิ่มพิกัด พิกัดนี้มีคนเพิ่มอยู่ $loopTime คน รอ Accept ค่ะ'),
+        title: Text('ขอบคุณที่เพิ่มพิกัดค่ะ'),
         actions: [
           FlatButton(
             onPressed: () {
@@ -216,7 +228,7 @@ class _MianAddLocationState extends State<MianAddLocation> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('พิกัดของคุณ Accept แล้ว'),
+        title: Text('พิกัดของคุณถูกยอมรับแล้ว'),
         actions: [
           FlatButton(
             onPressed: () async {
@@ -241,8 +253,8 @@ class _MianAddLocationState extends State<MianAddLocation> {
       margin: EdgeInsets.symmetric(
         vertical: 16,
       ),
-      width: 250,
-      height: 250,
+      width: 350,
+      height: 350,
       child: lat == null
           ? MyStyle().showProgress()
           : GoogleMap(
@@ -267,12 +279,18 @@ class _MianAddLocationState extends State<MianAddLocation> {
             ),
           )
           .toList(),
-      hint: Text('โปรดเลือกชนิดของพิกัด'),
+      hint: Text(
+        'โปรดเลือกชนิดของพิกัด',
+        style: TextStyle(color: Colors.deepOrange[300]),
+      ),
       onChanged: (value) {
         setState(() {
           typeMarker = value;
         });
       },
+      style: const TextStyle(
+        color: Colors.deepOrange,
+      ),
     );
   }
 
@@ -290,95 +308,105 @@ class _MianAddLocationState extends State<MianAddLocation> {
           }
         },
         decoration: InputDecoration(
+          prefixIcon:
+              Icon(Icons.account_balance, color: Colors.deepOrange[300]),
+          labelStyle: TextStyle(color: Colors.deepOrange[300]),
           labelText: 'ชื่อสถานที่: ',
-          border: OutlineInputBorder(),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.deepOrange[300]),
+            borderRadius: BorderRadius.circular(29),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.deepOrange[300]),
+            borderRadius: BorderRadius.circular(29),
+          ),
         ),
       ),
     );
   }
 
-  Drawer drawerMenu() {
-    return Drawer(
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          UserAccountsDrawerHeader(
-            currentAccountPicture: MyStyle().showLogo1(),
-            accountName: Text(
-              '$nameUser',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            accountEmail: Text(
-              'Login',
-              style: TextStyle(color: Colors.white70),
-            ),
-          ),
-          ListTile(
-            leading: IconButton(
-              icon: Icon(
-                Icons.motorcycle,
-                size: 30.0,
-              ),
-              onPressed: () {
-                MaterialPageRoute route =
-                    MaterialPageRoute(builder: (value) => Find());
-                Navigator.push(context, route);
-              },
-            ),
-            title: Text(
-              'หาพิกัดวินมอเตอร์ไซต์',
-              style: TextStyle(fontSize: 16),
-            ),
-            onTap: () {
-              MaterialPageRoute route =
-                  MaterialPageRoute(builder: (value) => Find());
-              Navigator.push(context, route);
-            },
-            selected: true,
-          ),
-          ListTile(
-            leading: IconButton(
-              icon: Icon(Icons.add_location, size: 30.0),
-              onPressed: () {
-                MaterialPageRoute route =
-                    MaterialPageRoute(builder: (value) => MianAddLocation());
-                Navigator.push(context, route);
-              },
-            ),
-            title: Text(
-              'เพิ่มพิกัดวินมอเตอร์ไซต์',
-              style: TextStyle(fontSize: 16),
-            ),
-            onTap: () {
-              MaterialPageRoute route =
-                  MaterialPageRoute(builder: (value) => MianAddLocation());
-              Navigator.push(context, route);
-            },
-            selected: true,
-          ),
-          Divider(),
-          Expanded(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: ListTile(
-                leading: IconButton(
-                  icon: Icon(
-                    Icons.exit_to_app,
-                    size: 30.0,
-                  ),
-                  onPressed: () => signOutProcess(context),
-                ),
-                title: Text(
-                  'ออกจากระบบ',
-                  style: TextStyle(fontSize: 16),
-                ),
-                onTap: () => signOutProcess(context),
-                selected: true,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Drawer drawerMenu() {
+  //   return Drawer(
+  //     child: Column(
+  //       mainAxisSize: MainAxisSize.max,
+  //       children: [
+  //         UserAccountsDrawerHeader(
+  //           currentAccountPicture: MyStyle().showLogo1(),
+  //           accountName: Text(
+  //             '$nameUser',
+  //             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  //           ),
+  //           accountEmail: Text(
+  //             'Login',
+  //             style: TextStyle(color: Colors.white70),
+  //           ),
+  //         ),
+  //         ListTile(
+  //           leading: IconButton(
+  //             icon: Icon(
+  //               Icons.motorcycle,
+  //               size: 30.0,
+  //             ),
+  //             onPressed: () {
+  //               MaterialPageRoute route =
+  //                   MaterialPageRoute(builder: (value) => Find());
+  //               Navigator.push(context, route);
+  //             },
+  //           ),
+  //           title: Text(
+  //             'หาพิกัดวินมอเตอร์ไซต์',
+  //             style: TextStyle(fontSize: 16),
+  //           ),
+  //           onTap: () {
+  //             MaterialPageRoute route =
+  //                 MaterialPageRoute(builder: (value) => Find());
+  //             Navigator.push(context, route);
+  //           },
+  //           selected: true,
+  //         ),
+  //         ListTile(
+  //           leading: IconButton(
+  //             icon: Icon(Icons.add_location, size: 30.0),
+  //             onPressed: () {
+  //               MaterialPageRoute route =
+  //                   MaterialPageRoute(builder: (value) => MianAddLocation());
+  //               Navigator.push(context, route);
+  //             },
+  //           ),
+  //           title: Text(
+  //             'เพิ่มพิกัดวินมอเตอร์ไซต์',
+  //             style: TextStyle(fontSize: 16),
+  //           ),
+  //           onTap: () {
+  //             MaterialPageRoute route =
+  //                 MaterialPageRoute(builder: (value) => MianAddLocation());
+  //             Navigator.push(context, route);
+  //           },
+  //           selected: true,
+  //         ),
+  //         Divider(),
+  //         Expanded(
+  //           child: Align(
+  //             alignment: Alignment.bottomCenter,
+  //             child: ListTile(
+  //               leading: IconButton(
+  //                 icon: Icon(
+  //                   Icons.exit_to_app,
+  //                   size: 30.0,
+  //                 ),
+  //                 onPressed: () => signOutProcess(context),
+  //               ),
+  //               title: Text(
+  //                 'ออกจากระบบ',
+  //                 style: TextStyle(fontSize: 16),
+  //               ),
+  //               onTap: () => signOutProcess(context),
+  //               selected: true,
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }
