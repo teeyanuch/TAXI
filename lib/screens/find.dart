@@ -188,8 +188,6 @@ class _FindState extends State<Find> {
                 height: 20.0,
               ),
               buildMap(),
-              // showMap(),
-              // lat == null ? MyStyle().showProgress() : showMap(),
               SizedBox(
                 height: 20.0,
               ),
@@ -229,65 +227,6 @@ class _FindState extends State<Find> {
                 markers: Set<Marker>.of(mapMarkers.values),
               ),
       );
-
-  // Set<Marker> myMarker() {
-  //   return <Marker>[
-  //     Marker(
-  //       markerId: MarkerId('taxiMarker'),
-  //       position: LatLng(18.60198944183668, 99.02076967163445),
-  //       infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ศรีสองเมือง'),
-  //       icon: BitmapDescriptor.defaultMarkerWithHue(30),
-  //     ),
-  //     Marker(
-  //       markerId: MarkerId('taxiMarker'),
-  //       position: LatLng(18.582807182576822, 99.00672417246128),
-  //       infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ในเมือง'),
-  //       icon: BitmapDescriptor.defaultMarkerWithHue(30),
-  //     ),
-  //     Marker(
-  //       markerId: MarkerId('taxiMarker'),
-  //       position: LatLng(18.59452201860414, 99.04792290226156),
-  //       infoWindow: InfoWindow(title: 'วินมอเตอร์ไซค์ ตลาดสันป่าฝ้าย'),
-  //       icon: BitmapDescriptor.defaultMarkerWithHue(30),
-  //     ),
-  //     Marker(
-  //       markerId: MarkerId('taxiMarker'),
-  //       position: LatLng(18.59142048148731, 99.04717187874293),
-  //       infoWindow: InfoWindow(title: 'ร้านเช่ารถ'),
-  //       icon: BitmapDescriptor.defaultMarkerWithHue(240),
-  //     ),
-  //     Marker(
-  //       markerId: MarkerId('taxiMarker'),
-  //       position: LatLng(18.592894974885816, 99.05183892251534),
-  //       infoWindow: InfoWindow(title: 'รถแท็กซี่'),
-  //       icon: BitmapDescriptor.defaultMarkerWithHue(120),
-  //     ),
-  //     Marker(
-  //       markerId: MarkerId('taxiMarker'),
-  //       position: LatLng(18.59374915832566, 99.04380302415778),
-  //       infoWindow: InfoWindow(title: 'รถสองแถว'),
-  //       icon: BitmapDescriptor.defaultMarkerWithHue(10),
-  //     ),
-  //   ].toSet();
-  // }
-
-  // Container showMap() {
-  //   LatLng latLng = LatLng(18.60198944183668, 99.02076967163445);
-  //   CameraPosition cameraPosition = CameraPosition(
-  //     target: latLng,
-  //     zoom: 14.0,
-  //   );
-
-  //   return Container(
-  //     height: 350.0,
-  //     child: GoogleMap(
-  //       initialCameraPosition: cameraPosition,
-  //       mapType: MapType.normal,
-  //       onMapCreated: (controller) {},
-  //       markers: myMarker(),
-  //     ),
-  //   );
-  // }
 
   Widget type1() {
     return Row(

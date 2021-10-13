@@ -4,6 +4,8 @@ import 'package:TAXI/screens/time.dart';
 import 'package:TAXI/screens/utility/my_style.dart';
 import 'package:TAXI/screens/utility/signout_process.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MainFind extends StatefulWidget {
@@ -13,12 +15,33 @@ class MainFind extends StatefulWidget {
 
 class _MainFindState extends State<MainFind> {
   String nameUser;
+  double lat, lng;
   // final today = DateTime.now();
 
   @override
   void initState() {
     super.initState();
     findUser();
+    findLatLng();
+  }
+
+  Future<Null> findLatLng() async {
+    Position position = await findPosition();
+    setState(() {
+      lat = position.latitude;
+      lng = position.longitude;
+      print('### lat = $lat, lng = $lng');
+    });
+  }
+
+  Future<Position> findPosition() async {
+    Position position;
+    try {
+      position = await Geolocator.getCurrentPosition();
+      return position;
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<Null> findUser() async {
@@ -37,12 +60,16 @@ class _MainFindState extends State<MainFind> {
       ),
       drawer: drawerMenu(),
       body: Container(
-        padding: EdgeInsets.symmetric(vertical: 150.0, horizontal: 10.0),
+        padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
         height: MediaQuery.of(context).size.height,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Timimg(),
+            SizedBox(
+              height: 10,
+            ),
+            buildMap(),
             Expanded(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -55,6 +82,33 @@ class _MainFindState extends State<MainFind> {
           ],
         ),
       ),
+    );
+  }
+
+  Container buildMap() {
+    return Container(
+      // decoration: BoxDecoration(boxShadow: [
+      //   BoxShadow(
+      //       color: Colors.deepOrange[300].withOpacity(0.5),
+      //       spreadRadius: 5,
+      //       blurRadius: 7,
+      //       offset: Offset(0, 3))
+      // ]),
+      margin: EdgeInsets.symmetric(
+        vertical: 16,
+      ),
+      width: 350,
+      height: 300,
+      child: lat == null
+          ? MyStyle().showProgress()
+          : GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: LatLng(lat, lng),
+                zoom: 14,
+              ),
+              onMapCreated: (controller) {},
+              myLocationEnabled: true,
+            ),
     );
   }
 
@@ -77,7 +131,8 @@ class _MainFindState extends State<MainFind> {
           ListTile(
             leading: IconButton(
               icon: Icon(
-                Icons.motorcycle, size: 30.0,
+                Icons.motorcycle,
+                size: 30.0,
               ),
               onPressed: () {
                 MaterialPageRoute route =
@@ -153,21 +208,21 @@ class _MainFindState extends State<MainFind> {
               children: [
                 Image.asset(
                   'images/$images.png',
-                  height: 120,
+                  height: 80,
                 ),
-                SizedBox(
-                  height: 5.0,
-                ),
+                // SizedBox(
+                //   height: 5.0,
+                // ),
                 Text(
                   text,
                   style: TextStyle(
                       color: Colors.deepOrange,
                       fontWeight: FontWeight.bold,
-                      fontSize: 18.0),
+                      fontSize: 16.0),
                 ),
-                SizedBox(
-                  height: 10.0,
-                ),
+                // SizedBox(
+                //   height: 10.0,
+                // ),
                 Text(
                   subtext,
                   style: TextStyle(
@@ -181,7 +236,7 @@ class _MainFindState extends State<MainFind> {
               ],
             ),
           ),
-          margin: EdgeInsets.only(left: 10, right: 10, top: 20, bottom: 20),
+          margin: EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
           decoration: BoxDecoration(
             color: Colors.deepOrange[100],
             borderRadius: BorderRadius.only(
@@ -215,21 +270,21 @@ class _MainFindState extends State<MainFind> {
               children: [
                 Image.asset(
                   'images/$images.png',
-                  height: 120,
+                  height: 80,
                 ),
-                SizedBox(
-                  height: 5.0,
-                ),
+                // SizedBox(
+                //   height: 5.0,
+                // ),
                 Text(
                   text,
                   style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 18.0),
+                      fontSize: 16.0),
                 ),
-                SizedBox(
-                  height: 10.0,
-                ),
+                // SizedBox(
+                //   height: 10.0,
+                // ),
                 Text(
                   subtext,
                   style: TextStyle(
@@ -237,13 +292,13 @@ class _MainFindState extends State<MainFind> {
                       fontWeight: FontWeight.bold,
                       fontSize: 12.0),
                 ),
-                SizedBox(
-                  height: 5.0,
-                ),
+                // SizedBox(
+                //   height: 5.0,
+                // ),
               ],
             ),
           ),
-          margin: EdgeInsets.only(left: 10, right: 10, top: 20, bottom: 20),
+          margin: EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
           decoration: BoxDecoration(
             color: Colors.deepOrange[300],
             borderRadius: BorderRadius.only(

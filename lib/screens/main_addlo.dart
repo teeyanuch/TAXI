@@ -260,7 +260,7 @@ class _MianAddLocationState extends State<MianAddLocation> {
           : GoogleMap(
               initialCameraPosition: CameraPosition(
                 target: LatLng(lat, lng),
-                zoom: 16,
+                zoom: 17,
               ),
               onMapCreated: (controller) {},
               myLocationEnabled: true,
