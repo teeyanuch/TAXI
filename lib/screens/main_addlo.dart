@@ -23,6 +23,9 @@ class _MianAddLocationState extends State<MianAddLocation> {
   final formKey = GlobalKey<FormState>();
   TextEditingController namePlateController = TextEditingController();
 
+  List<PositionModel> positionModels = [];
+  Map<MarkerId, Marker> mapMarkers = {};
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +34,44 @@ class _MianAddLocationState extends State<MianAddLocation> {
 
     findUser();
     findLatLng();
+    readAllPosition();
+  }
+
+  Future<void> readAllPosition() async {
+    if (positionModels.isNotEmpty) {
+      positionModels.clear();
+      mapMarkers.clear();
+    }
+
+    String path = '${MyConstant.domain}/findtaxi/getAllPosition.php';
+    await Dio().get(path).then((value) {
+      for (var item in json.decode(value.data)) {
+        PositionModel model = PositionModel.fromMap(item);
+        setState(() {
+          positionModels.add(model);
+          createMarker(model);
+        });
+      }
+    });
+  }
+
+  int i = 0;
+
+  void createMarker(PositionModel positionModel) {
+    i++;
+    MarkerId markerId = MarkerId('id$i');
+    Marker marker = Marker(
+        markerId: markerId,
+        position: LatLng(
+          double.parse(
+            positionModel.lat.trim(),
+          ),
+          double.parse(positionModel.lng),
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(
+          73.5,
+        ));
+    mapMarkers[markerId] = marker;
   }
 
   Future<Null> findLatLng() async {
@@ -207,10 +248,12 @@ class _MianAddLocationState extends State<MianAddLocation> {
   }
 
   Future<Null> waitAcceptDialog(int loopTime) async {
+    int loop = 5 - loopTime;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('ขอบคุณที่เพิ่มพิกัดค่ะ'),
+        title: Text(
+            'ขอบคุณที่เพิ่มพิกัดค่ะ พิกัดนี้มีคนเพิ่มแล้ว $loopTime คน รออีก $loop คน เพื่อยอมรับพิกัดนี้'),
         actions: [
           FlatButton(
             onPressed: () {
@@ -264,6 +307,7 @@ class _MianAddLocationState extends State<MianAddLocation> {
               ),
               onMapCreated: (controller) {},
               myLocationEnabled: true,
+              markers: Set<Marker>.of(mapMarkers.values),
             ),
     );
   }
@@ -324,89 +368,4 @@ class _MianAddLocationState extends State<MianAddLocation> {
       ),
     );
   }
-
-  // Drawer drawerMenu() {
-  //   return Drawer(
-  //     child: Column(
-  //       mainAxisSize: MainAxisSize.max,
-  //       children: [
-  //         UserAccountsDrawerHeader(
-  //           currentAccountPicture: MyStyle().showLogo1(),
-  //           accountName: Text(
-  //             '$nameUser',
-  //             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-  //           ),
-  //           accountEmail: Text(
-  //             'Login',
-  //             style: TextStyle(color: Colors.white70),
-  //           ),
-  //         ),
-  //         ListTile(
-  //           leading: IconButton(
-  //             icon: Icon(
-  //               Icons.motorcycle,
-  //               size: 30.0,
-  //             ),
-  //             onPressed: () {
-  //               MaterialPageRoute route =
-  //                   MaterialPageRoute(builder: (value) => Find());
-  //               Navigator.push(context, route);
-  //             },
-  //           ),
-  //           title: Text(
-  //             'หาพิกัดวินมอเตอร์ไซต์',
-  //             style: TextStyle(fontSize: 16),
-  //           ),
-  //           onTap: () {
-  //             MaterialPageRoute route =
-  //                 MaterialPageRoute(builder: (value) => Find());
-  //             Navigator.push(context, route);
-  //           },
-  //           selected: true,
-  //         ),
-  //         ListTile(
-  //           leading: IconButton(
-  //             icon: Icon(Icons.add_location, size: 30.0),
-  //             onPressed: () {
-  //               MaterialPageRoute route =
-  //                   MaterialPageRoute(builder: (value) => MianAddLocation());
-  //               Navigator.push(context, route);
-  //             },
-  //           ),
-  //           title: Text(
-  //             'เพิ่มพิกัดวินมอเตอร์ไซต์',
-  //             style: TextStyle(fontSize: 16),
-  //           ),
-  //           onTap: () {
-  //             MaterialPageRoute route =
-  //                 MaterialPageRoute(builder: (value) => MianAddLocation());
-  //             Navigator.push(context, route);
-  //           },
-  //           selected: true,
-  //         ),
-  //         Divider(),
-  //         Expanded(
-  //           child: Align(
-  //             alignment: Alignment.bottomCenter,
-  //             child: ListTile(
-  //               leading: IconButton(
-  //                 icon: Icon(
-  //                   Icons.exit_to_app,
-  //                   size: 30.0,
-  //                 ),
-  //                 onPressed: () => signOutProcess(context),
-  //               ),
-  //               title: Text(
-  //                 'ออกจากระบบ',
-  //                 style: TextStyle(fontSize: 16),
-  //               ),
-  //               onTap: () => signOutProcess(context),
-  //               selected: true,
-  //             ),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 }
